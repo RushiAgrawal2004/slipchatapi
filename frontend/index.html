@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slipchat AI Chatbot - Demo</title>
+    <style>
+        :root {
+            --color-primary: #2196F3;
+            --color-primary-hover: #1976D2;
+            --color-primary-active: #0D47A1;
+            --color-background: #f5f5f5;
+            --color-surface: #ffffff;
+            --color-text: #333333;
+            --color-text-secondary: #666666;
+            --color-border: #e0e0e0;
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.15);
+            --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.2);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .demo-container {
+            max-width: 1200px;
+            width: 100%;
+            background: white;
+            border-radius: 20px;
+            padding: 60px 40px;
+            box-shadow: var(--shadow-lg);
+            text-align: center;
+        }
+
+        .demo-container h1 {
+            font-size: 48px;
+            color: #333;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+        .demo-container p {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-top: 50px;
+        }
+
+        .feature-card {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            transition: transform 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .feature-card .icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .feature-card h3 {
+            font-size: 20px;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .feature-card p {
+            font-size: 14px;
+            color: #666;
+            margin: 0;
+        }
+
+        .cta-text {
+            position: fixed;
+            bottom: 100px;
+            right: 30px;
+            background: white;
+            padding: 15px 25px;
+            border-radius: 50px;
+            box-shadow: var(--shadow-md);
+            font-size: 14px;
+            color: #333;
+            animation: bounce 2s infinite;
+            pointer-events: none;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-10px);
+            }
+            60% {
+                transform: translateY(-5px);
+            }
+        }
+
+        /* Chat Widget Styles */
+        .chat-widget {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .chat-toggle {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--color-primary);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow-md);
+            transition: all 0.3s ease;
+            font-size: 30px;
+        }
+
+        .chat-toggle:hover {
+            background: var(--color-primary-hover);
+            transform: scale(1.1);
+        }
+
+        .chat-toggle:active {
+            background: var(--color-primary-active);
+            transform: scale(0.95);
+        }
+
+        .chat-window {
+            position: fixed;
+            bottom: 90px;
+            right: 20px;
+            width: 380px;
+            height: 550px;
+            background: var(--color-surface);
+            border-radius: 16px;
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            flex-direction: column;
+            opacity: 0;
+            transform: scale(0.8) translateY(20px);
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .chat-window.active {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+            pointer-events: all;
+        }
+
+        .chat-header {
+            background: var(--color-primary);
+            color: white;
+            padding: 20px;
+            border-radius: 16px 16px 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .bot-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .bot-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .bot-details {
+            text-align: left;
+        }
+
+        .bot-name {
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .bot-status {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .close-chat {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background 0.2s;
+        }
+
+        .close-chat:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .chat-body {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f8f9fa;
+        }
+
+        .chat-body::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-body::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 3px;
+        }
+
+        .message {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+            animation: messageSlide 0.3s ease;
+        }
+
+        @keyframes messageSlide {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--color-primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .message-content {
+            flex: 1;
+        }
+
+        .message-text {
+            background: white;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 14px;
+            line-height: 1.5;
+            color: var(--color-text);
+            box-shadow: var(--shadow-sm);
+            display: inline-block;
+            max-width: 100%;
+            word-wrap: break-word;
+        }
+
+        .quick-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .quick-action-btn {
+            background: white;
+            border: 1px solid var(--color-primary);
+            color: var(--color-primary);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .quick-action-btn:hover {
+            background: var(--color-primary);
+            color: white;
+        }
+
+        .chat-footer {
+            padding: 16px;
+            background: white;
+            border-top: 1px solid var(--color-border);
+            border-radius: 0 0 16px 16px;
+        }
+
+        .input-container {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .message-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid var(--color-border);
+            border-radius: 24px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .message-input:focus {
+            border-color: var(--color-primary);
+        }
+
+        .send-button {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--color-primary);
+            border: none;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            font-size: 18px;
+        }
+
+        .send-button:hover {
+            background: var(--color-primary-hover);
+            transform: scale(1.1);
+        }
+
+        .send-button:active {
+            transform: scale(0.95);
+        }
+
+        .powered-by {
+            text-align: center;
+            font-size: 11px;
+            color: #999;
+            margin-top: 8px;
+        }
+
+        .typing-indicator .message-text {
+            display: flex;
+            gap: 4px;
+            padding: 12px 16px;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--color-text-secondary);
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% {
+                opacity: 0.3;
+                transform: scale(0.8);
+            }
+            30% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            .demo-container {
+                padding: 40px 20px;
+            }
+
+            .demo-container h1 {
+                font-size: 32px;
+            }
+
+            .chat-window {
+                width: calc(100vw - 40px);
+                right: 20px;
+                left: 20px;
+                height: 500px;
+            }
+
+            .cta-text {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Demo Page Content -->
+    <div class="demo-container">
+        <h1>💬 Slipchat AI Chatbot</h1>
+        <p>Experience intelligent conversations powered by Gemini AI. Click the chat button below to start talking with our AI assistant!</p>
+        
+        <div class="features">
+            <div class="feature-card">
+                <div class="icon">🤖</div>
+                <h3>AI-Powered</h3>
+                <p>Powered by Gemini AI for intelligent, context-aware responses</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">💬</div>
+                <h3>Natural Conversations</h3>
+                <p>Chat naturally with advanced language understanding</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">⚡</div>
+                <h3>Real-Time Responses</h3>
+                <p>Get instant answers to your questions</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">🎯</div>
+                <h3>Context Aware</h3>
+                <p>Remembers conversation history for better assistance</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- CTA Text -->
+    <div class="cta-text">
+        👉 Click here to chat!
+    </div>
+
+    <!-- Chat Widget -->
+    <div class="chat-widget">
+        <!-- Chat Toggle Button -->
+        <button class="chat-toggle" id="chatToggle">💬</button>
+
+        <!-- Chat Window -->
+        <div class="chat-window" id="chatWindow">
+            <!-- Chat Header -->
+            <div class="chat-header">
+                <div class="bot-info">
+                    <div class="bot-avatar">💬</div>
+                    <div class="bot-details">
+                        <div class="bot-name">Slipchat</div>
+                        <div class="bot-status">● Online</div>
+                    </div>
+                </div>
+                <button class="close-chat" id="closeChat">✕</button>
+            </div>
+
+            <!-- Chat Body -->
+            <div class="chat-body" id="chatBody">
+                <!-- Welcome Message -->
+                <div class="message">
+                    <div class="message-avatar">💬</div>
+                    <div class="message-content">
+                        <div class="message-text">
+                            Hi! Welcome to Slipchat. I'll be assisting you here today.
+                        </div>
+                        <div class="quick-actions">
+                            <button class="quick-action-btn" onclick="sendQuickMessage('Book a Demo')">Book a Demo</button>
+                            <button class="quick-action-btn" onclick="sendQuickMessage('Know about me')">Know about me</button>
+                            <button class="quick-action-btn" onclick="sendQuickMessage('Chatbot use cases')">Chatbot use cases</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="message">
+                    <div class="message-avatar">💬</div>
+                    <div class="message-content">
+                        <div class="message-text">
+                            How can I help you today?
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat Footer -->
+            <div class="chat-footer">
+                <div class="input-container">
+                    <input 
+                        type="text" 
+                        class="message-input" 
+                        id="messageInput" 
+                        placeholder="Type your message..."
+                        autocomplete="off"
+                    >
+                    <button class="send-button" id="sendButton">➤</button>
+                </div>
+                <div class="powered-by">powered by Slipchat AI 💬</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chat Widget JavaScript -->
+    <script src="chat-widget.js"></script>
+    
+    <!-- Quick Message Handler -->
+    <script>
+        function sendQuickMessage(message) {
+            const messageInput = document.getElementById('messageInput');
+            messageInput.value = message;
+            document.getElementById('sendButton').click();
+        }
+    </script>
+</body>
+</html>
