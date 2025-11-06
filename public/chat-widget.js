@@ -1,7 +1,7 @@
 class ChatWidget {
     constructor() {
         // Base API URL — change when deployed
-        this.API_BASE_URL = 'http://localhost:3000'; 
+        this.API_BASE_URL = 'https://slipchatapi.vercel.app'; 
 
         // Generate a random session ID per user
         this.sessionId = this.generateSessionId();
