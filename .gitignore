@@ -1,4 +1,4 @@
-# Ignore environment variables
-.env
-
 node_modules/
+.env
+.DS_Store
+.vercel

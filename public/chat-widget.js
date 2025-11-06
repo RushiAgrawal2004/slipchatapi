@@ -1,7 +1,15 @@
 class ChatWidget {
     constructor() {
-        this.API_BASE_URL = 'http://localhost:3000';
+        // Base API URL — change when deployed
+        this.API_BASE_URL = 'http://localhost:3000'; 
+
+        // Generate a random session ID per user
         this.sessionId = this.generateSessionId();
+
+        // ✅ Try to get Slipchat API key
+        const currentScript = document.currentScript || document.querySelector('script[src*="chat-widget.js"]');
+        this.apiKey = currentScript?.getAttribute('data-api-key') || 'demo_key_123';
+
         this.init();
     }
 
@@ -28,9 +36,7 @@ class ChatWidget {
         sendButton.addEventListener('click', () => this.sendMessage());
         
         messageInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                this.sendMessage();
-            }
+            if (e.key === 'Enter') this.sendMessage();
         });
     }
 
@@ -49,7 +55,7 @@ class ChatWidget {
             `;
         } else {
             messageDiv.innerHTML = `
-                <div class="message-avatar">🐧</div>
+                <div class="message-avatar">💬</div>
                 <div class="message-content">
                     <div class="message-text">
                         ${this.escapeHtml(text)}
@@ -71,13 +77,11 @@ class ChatWidget {
     async sendMessage() {
         const messageInput = document.getElementById('messageInput');
         const message = messageInput.value.trim();
-        
         if (!message) return;
 
         this.addMessage(message, true);
         messageInput.value = '';
 
-        // Show typing indicator
         this.addTypingIndicator();
 
         try {
@@ -85,6 +89,7 @@ class ChatWidget {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'x-api-key': this.apiKey  // ✅ Add Slipchat API key header
                 },
                 body: JSON.stringify({
                     message: message,
@@ -94,10 +99,7 @@ class ChatWidget {
 
             this.removeTypingIndicator();
 
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-
+            if (!response.ok) throw new Error('Network response was not ok');
             const data = await response.json();
             this.addMessage(data.reply, false);
 
@@ -114,7 +116,7 @@ class ChatWidget {
         typingDiv.className = 'message typing-indicator';
         typingDiv.id = 'typingIndicator';
         typingDiv.innerHTML = `
-            <div class="message-avatar">🐧</div>
+            <div class="message-avatar">💬</div>
             <div class="message-content">
                 <div class="message-text">
                     <span class="typing-dot"></span>
@@ -129,26 +131,11 @@ class ChatWidget {
 
     removeTypingIndicator() {
         const indicator = document.getElementById('typingIndicator');
-        if (indicator) {
-            indicator.remove();
-        }
+        if (indicator) indicator.remove();
     }
 }
 
-// Initialize widget when DOM is loaded
+// Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
     new ChatWidget();
 });
-
-// Handle quick action buttons
-function handleQuickAction(action) {
-    const widget = new ChatWidget();
-    widget.addMessage(action, true);
-    widget.sendMessage = async function() {
-        // Override to send the action text
-        const messageInput = document.getElementById('messageInput');
-        messageInput.value = action;
-        ChatWidget.prototype.sendMessage.call(this);
-    };
-    widget.sendMessage();
-}
